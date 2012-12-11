@@ -5,6 +5,8 @@ It consists of two parts:
 
 See "Joomla Build Script readme.pdf" for full documentation.
 
-Issued under the terms of the GNU GENERAL PUBLIC LICENSE (License.txt.
+Issued under the terms of the GNU GENERAL PUBLIC LICENSE (License.txt).
+
+Developer contact details: see https://www.jamesbrice.com/articles/joomla-secrets/92-joomlextbuild-script
 
 Although not a fork, this project has been based on the code and ideas to be found here: https://github.com/rvsjoen/joomla-helloworld
