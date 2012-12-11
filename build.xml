@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="build_j_extension" default="">
+
+<!--******************************************************************************************************
+	 	Initialisation
+    ******************************************************************************************************  -->
+
+	<!-- Get the property file to define the key folder locations -->
+	<property file="./build.properties" />
+
+	<!-- define some failsafe locations in case property file above not found 
+		(NB property file entries always override property declarations) --> 
+	<property name="project.root" value="/tmp" />
+	<property name="repo.folder" value="/tmp/repo" />
+	<property name="build.folder" value="/tmp/build" />
+	<!-- <property name="project.properties.folder" value="${repo.folder}" /> -->
+
+	<!-- set project specific properties from external file "project  properties" -->
+	<!-- or override by selecting file on run with "$phing -propertyfile <filename>"   -->
+	<!-- this file may be conveniently placed in the code repository to enable tracking of version changes etc.   -->
+	<property file="${project.properties.folder}/project.properties" />
+
+	<!-- define some typical values for this property file below (overridden if in proprty file) --> 
+	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
+	<property name="package.name" value="pkg_test" />
+	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
+	<property name="element.list" value="plg_authentication_gmail,mod_breadcrumbs,com_banners" />
+	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
+	<property name="build.version" value="2.3.1" />
+
+
+	<!-- exclusions from build process - e.g. /tests folder found in copies of git repo. -->
+	<property name="file_excludes" value="**/tests/**/*" />
+
+	<!-- Set up some some timestamps -->
+	<tstamp>
+		<format property="build.time" pattern="%Y-%h-%d" />
+		<format property="build.month" pattern="%h %Y" />
+		<format property="build.year" pattern="%Y" />
+	</tstamp>
+
+<!--******************************************************************************************************
+	 	End of Initialisation
+    ******************************************************************************************************  -->
+
+<!--******************************************************************************************************
+	 Update Repo. - Loop through extension's elements and get updated files into the repository from the test server 
+    ******************************************************************************************************  -->
+	<target name="update_repo" depends="_customtasks" description="copies project files to the repo.location">
+		<foreach list="${element.list}" param="element.name" target="sub_update_repo" />
+	</target>
+
+    <target name="sub_update_repo">
+	<!-- Copy all the files for an extension element from test server to the repo.location -->
+		<!-- feed current "element.name" to PHP routine in _customtasks to decompose into type, group, etc. -->
+		<jproject name="${element.name}" />
+		<!-- Copy extension resources files to repository folder by calling the appropriate target routine -->
+		<!-- debug code <echo msg="DEBUG: element.name=${element.name}, element.dir = ${element.dir}" /> -->
+		<phingcall target="get_${element.type}"></phingcall>
+		<!-- Update Version numbers and dates in the copied PHP files -->
+		<phingcall target="do_datestamps" />
+	</target>
+
+	<target name="get_module">
+	<!-- copies module project files to the repo.location -->
+		<!-- First we check if the extension has a media folder -->
+		<phingcall target="_media" />
+
+		<!-- Add the administrator prefix if this is an admin extension -->
+		<if>
+			<equals arg1="${element.client}" arg2="admin" />
+			<then>
+				<property name="source.dir" value="${project.root}/administrator/modules/${element.dir}" override="true"/>
+			</then>
+			<else>
+				<property name="source.dir" value="${project.root}/modules/${element.dir}" override="true" />
+			</else>
+		</if>
+		<!-- Now use the source.dir property to copy the source files -->
+		<if>
+			<available file="${source.dir}" type="dir" />
+			<then>
+				<echo msg="Building module from source tree ${source.dir}" />
+				<copy todir="${repo.folder}/${package.name}/${element.name}" haltonerror="false">
+					<fileset dir="${source.dir}">
+						<include name="**/*"/>
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<fail msg="Source folder does not exist ${source.dir}" />
+			</else>
+		</if>
+		<!-- Look for lanaguage files in shared language folders -->
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/administrator/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="get_plugin">
+	<!-- copies plugin project files to the repo.location -->
+		<!-- First we check if the extension has a media folder  -->
+		<phingcall target="_media" />
+
+		<property name="source.dir" value="${project.root}/plugins/${plugin.group}/${element.dir}" override="true"/>
+		<if>
+			<available file="${source.dir}" type="dir" />
+			<then>
+				<echo msg="Building plugin from source tree ${source.dir}" />
+				<copy todir="${repo.folder}/${package.name}/${element.name}" haltonerror="false">
+					<fileset dir="${source.dir}">
+						<include name="**/*"/>
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<fail msg="Source folder does not exist ${source.dir}" />
+			</else>
+		</if>
+		<!-- Look for lanaguage files in shared language folders -->
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/administrator/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="get_component" >
+	<!-- copies component project files to the repo.location -->
+		<!-- First we check if the extension has a media folder -->
+		<phingcall target="_media" /> 
+
+		<copy todir="${repo.folder}/${package.name}/${element.name}/site" haltonerror="false">
+			<fileset dir="${project.root}/components/${element.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/${element.name}/admin" haltonerror="false">
+			<fileset dir="${project.root}/administrator/components/${element.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<!-- Move the manifest to the parent directory -->
+		<move file="${repo.folder}/${package.name}/${element.name}/admin/${element.manifest}.xml" todir="${repo.folder}/${package.name}/${element.name}" />
+		<!-- Move the installer script if it exists -->
+		<if>
+			<available file="${repo.folder}/${package.name}/${element.name}/admin/script.php" type="file" />
+			<then>
+				<move file="${repo.folder}/${package.name}/${element.name}/admin/script.php" todir="$${repo.folder}/${package.name}/${element.name}" />
+			</then>
+		</if>
+		<!-- Look for lanaguage files in shared language folders -->
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/administrator/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="get_template">
+	<!-- copies template project files to the repo.location -->
+		<if>
+			<equals arg1="${element.client}" arg2="admin" />
+			<then>
+				<property name="source.dir" value="${project.root}/administrator/templates/${element.dir}" override="true"/>
+			</then>
+			<else>
+				<property name="source.dir" value="${project.root}/templates/${element.dir}" override="true" />
+			</else>
+		</if>
+		<if>
+			<available file="${source.dir}" type="dir" />
+			<then>
+				<echo msg="Building template from source tree ${source.dir}" />
+				<copy todir="${repo.folder}/${package.name}/${element.name}" haltonerror="false">
+					<fileset dir="${source.dir}">
+						<include name="**/*"/>
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<fail msg="Source folder does not exist ${source.dir}" />
+			</else>
+		</if>
+		<!-- Look for lanaguage files in shared language folders -->
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
+			<fileset dir="${project.root}/administrator/language">
+				<include name="**/*${element.name}*.ini"/>
+				<exclude name="**/overrides/**.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+
+	<target name="_media">
+	<!-- Check if the extension has a media folder and copy it -->
+			<if>
+				<available file="${repo.folder}/media/${element.name}" type="dir" />
+				<then>
+					<copy todir="${repo.folder}/${package.name}/${element.name}/media" haltonerror="false">
+						<fileset dir="${project.root}/media/${element.name}">
+							<include name="**/*"/>
+						</fileset>
+					</copy>
+				</then>
+			</if>
+	</target>
+
+    <target name="do_datestamps">
+		<!-- Update version no. and build date in PHP file headers -->		
+		<property name="find.version.data"><![CDATA[((\*\s*@version\s*).*)]]></property>
+		<property name="replace.version.data" value="${2}${build.version} Dated: ${build.time}"/>
+
+		<reflexive>
+		  <fileset dir="${repo.folder}">
+			<include name="**/*.php" />
+		  </fileset>
+		  <filterchain>
+			<replaceregexp>
+				<!-- Update version number -->
+				<regexp pattern="${find.version.data}" replace="${replace.version.data}" ignoreCase="true"/>
+			</replaceregexp>
+		  </filterchain>
+		</reflexive>
+		<!-- Update headers in manifest (.XML) file(s) -->
+		<property name="find1"><![CDATA[<creationDate>.*</creationDate>]]></property>
+		<property name="replace1"><![CDATA[<creationDate>${build.time}</creationDate>]]></property>
+		<property name="find2"><![CDATA[<version>.*</version>]]></property>
+		<property name="replace2"><![CDATA[<version>${build.version}</version>]]></property>
+		<reflexive>
+		  <fileset dir="${repo.folder}">
+			<include name="**/*.xml" />
+		  </fileset>
+		  <filterchain>
+			<replaceregexp>
+				<!-- Update version number -->
+				<regexp pattern="${find1}" replace="${replace1}" ignoreCase="true"/>
+				<regexp pattern="${find2}" replace="${replace2}" ignoreCase="true"/>
+			</replaceregexp>
+		  </filterchain>
+		</reflexive>
+    </target>
+<!--******************************************************************************************************
+	 end of Build Repo. Copy
+    ******************************************************************************************************  -->
+
+
+<!--******************************************************************************************************
+	  Build Extension - Collect extension files from repository, move to build folder and into a ZIP file 
+    ******************************************************************************************************  -->
+    <target name="build_extension" depends="clear_buildfiles, build_dist_files, build_package" description="Builds the extension distro. file from repository contents." />
+
+	<target name="clear_buildfiles" >
+	<!-- "deletes old build files for current project from the build location -->
+		<delete>
+			<fileset dir="${build.folder}/${package.name}" includes="*"/>
+		</delete>
+		<mkdir dir="${build.folder}/${package.name}" />
+	</target>
+
+
+	<target name="build_dist_files">
+	<!-- Loop through folders in repo. for each extension element and build ZIP files -->
+		<foreach param="dir.name" absparam="folder.path" target="_add_to_zip">
+		  <fileset dir="${repo.folder}/${package.name}">
+				<type type="dir" />
+				<depth max="0" min="0" />
+		  </fileset>
+		</foreach>
+	</target>
+
+	<target name="_add_to_zip">
+	<!-- Build a distribution package for an extension element -->
+		<property name="dest.folder" value="${build.folder}/${package.name}" />
+		<mkdir dir="${dest.folder}" />
+		<zip destfile="${dest.folder}/${dir.name}.zip" >
+				<fileset dir="${folder.path}">
+					 <include name="**/**" />
+				</fileset>
+		</zip>
+	</target>
+
+	<target name="build_package">
+	<!-- Build collection in root build.folder of extension files repo.folder making up this package -->
+		<property name="source.folder" value="${repo.folder}/${package.name}" />
+		<property name="build.location" value="${build.folder}/${package.name}" />
+		<!-- Get copy of package manifest from repo. - if one. Abort if not-->
+		<property name="package.manifest" value="${package.name}.xml" />
+		<if>
+			<available file="${repo.folder}/${package.name}/${package.manifest}" type="file" />
+			<then> <!-- this is a multi-element package -->
+				<!-- so move element packages to "extensions" folder -->
+				<mkdir dir="${build.location}/extensions" />
+				<move todir="${build.location}/extensions" haltonerror="false">
+					<fileset dir="${build.location}">
+						<include name="*.zip"/>
+						<include name="*.tar*.*"/>
+					</fileset>
+				</move>
+
+				<!-- Get a copy of manifest .XML file and package licence from the repo. -->
+				<!-- Update package manifest with Version date etc. at the same time -->
+				<property name="find1"><![CDATA[<date>.*</date>]]></property>
+				<property name="replace1"><![CDATA[<date>${build.time}</date>]]></property>
+				<property name="find2"><![CDATA[<version>.*</version>]]></property>
+				<property name="replace2"><![CDATA[<version>${build.version}</version>]]></property>
+				<copy todir="${build.location}" haltonerror="false">
+					<fileset dir="${source.folder}" casesensitive="false">
+						<include name="${package.manifest}"/>
+						<include name="licence.txt"/>
+						<include name="license.txt"/>
+					</fileset>
+					<filterchain>
+						<replaceregexp>
+							<!-- Update version number -->
+							<regexp pattern="${find1}" replace="${replace1}" ignoreCase="true"/>
+							<regexp pattern="${find2}" replace="${replace2}" ignoreCase="true"/>
+						</replaceregexp>
+					</filterchain>
+				</copy>
+				<phingcall target = "zip_multi_package"/>
+			</then>
+		</if>
+	</target>
+
+	<target name="zip_multi_package">
+		<fileset dir="${build.folder}/${package.name}" casesensitive="false"  id="zip.these" >
+			 <include name="extensions/**.*" />
+			 <include name="${package.name}.xml" />
+			 <include name="licence.txt" />
+			 <include name="license.txt" />
+		</fileset>
+		<!-- Zip up package components -->
+		<zip destfile="${build.folder}/${package.name}/${package.name}.zip" >
+			 <fileset refid="zip.these" />
+		</zip>
+		<!-- Clean up -->
+		<delete>
+			<fileset refid="zip.these" />
+		</delete> 
+		<delete dir="${build.location}/extensions" includeemptydirs="true" verbose="true" failonerror="false" />
+	</target> 
+
+<!--******************************************************************************************************
+	  End of Build Distibution File 
+    ******************************************************************************************************  -->
+
+<!--******************************************************************************************************
+	 	Untility Routines in here
+    ******************************************************************************************************  -->
+    <target name="_customtasks">
+        <adhoc-task name="jproject">
+            <![CDATA[
+                class JoomlaProjectTask extends PropertyTask
+                {
+                    public function setName($str){
+                        $this->project->setProperty("element.name", $str);
+                        $this->project->setProperty("element.client", "site");
+                        $arr = explode("_", $str);
+                        $prefix = $arr[0];
+                        switch($prefix){
+                            case 'plg':
+                                $this->project->setProperty("element.type", "plugin");
+                                $this->project->setProperty("plugin.group", $arr[1]);
+                              	$this->project->setProperty("element.dir", implode("_", array_slice($arr, 2)));
+                                $this->project->setProperty("element.manifest", implode("_", array_slice($arr, 1)));
+                                break;
+                            case 'mod':
+                                $this->project->setProperty("element.type", "module");
+                                $this->project->setProperty("element.dir", implode("_", $arr));
+                                $this->project->setProperty("element.manifest", implode("_", $arr));
+                                if($arr[1] == 'admin'){
+									unset($arr[1]);
+                                    $this->project->setProperty("element.dir", implode("_", $arr));
+                                    $this->project->setProperty("element.client", "admin");
+                                }
+                                break;
+                            case 'com':
+                                $this->project->setProperty("element.name", $str);
+                                $this->project->setProperty("element.type", "component");
+                                $this->project->setProperty("element.dir", implode("_", $arr));
+                                $this->project->setProperty("element.manifest", implode("_", array_slice($arr, 1)));
+                                break;
+                            case 'tpl':
+								$this->project->setProperty("element.type", "template");
+                                $this->project->setProperty("element.dir", implode("_", array_slice($arr, 1)));
+                                $this->project->setProperty("element.manifest", "templateDetails.xml");
+								if($arr[1] == 'admin'){
+                                   $this->project->setProperty("element.dir", implode("_", array_slice($arr, 2)));
+                                    $this->project->setProperty("element.client", "admin");
+                                }
+                                break;
+                        }
+                    }
+
+                    public function main(){}
+                }
+            ]]>
+        </adhoc-task>
+    </target>
+<!--******************************************************************************************************
+	 	End of Utility Routines
+    ******************************************************************************************************  -->
+<!--******************************************************************************************************
+	 	Test Code in here
+    ******************************************************************************************************  -->
+	<target name="test" depends="" description="xxxx">
+		<echo msg="just for testing stuff" />
+	</target>
+
+<!--******************************************************************************************************
+	 	End of Test Code
+    ******************************************************************************************************  -->
+
+</project>
+
