@@ -5,20 +5,32 @@
 	 	Initialisation
     ******************************************************************************************************  -->
 
-	<!-- Get the property file to define the key folder locations -->
-	<property file="./build.properties" />
+	<!-- Get the property file to define the key folder locations if available -->
+	<!-- (conditional load stops error messages when properties file loaded by command line) -->
+		<if>
+			<available file="./build.properties" type="file" />
+			<then>
+					<property file="./build.properties" />
+			</then> 
+		</if>
 
 	<!-- define some failsafe locations in case property file above not found 
 		(NB property file entries always override property declarations) --> 
 	<property name="project.root" value="/tmp" />
 	<property name="repo.folder" value="/tmp/repo" />
 	<property name="build.folder" value="/tmp/build" />
-	<!-- <property name="project.properties.folder" value="${repo.folder}" /> -->
 
 	<!-- set project specific properties from external file "project  properties" -->
 	<!-- or override by selecting file on run with "$phing -propertyfile <filename>"   -->
 	<!-- this file may be conveniently placed in the code repository to enable tracking of version changes etc.   -->
-	<property file="${project.properties.folder}/project.properties" />
+	<!-- Get the property file to define the key folder locations if available -->
+	<!-- (conditional stops error messages when properties file loaded by command line) -->
+		<if>
+				<available file="${project.properties.folder}/project.properties" type="file" />
+			<then>
+				<property file="${project.properties.folder}/project.properties" />
+			</then> 
+		</if>
 
 	<!-- define some typical values for this property file below (overridden if in proprty file) --> 
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
@@ -138,6 +150,7 @@
 				<include name="**/*${element.name}*.ini"/>
 				<exclude name="**/overrides/**.*"/>
 			</fileset>
+
 		</copy>
 	</target>
 
@@ -270,7 +283,7 @@
 		</reflexive>
     </target>
 <!--******************************************************************************************************
-	 end of Build Repo. Copy
+	 end of Update Repo.
     ******************************************************************************************************  -->
 
 
