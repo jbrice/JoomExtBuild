@@ -19,6 +19,8 @@
 	<property name="project.root" value="/tmp" />
 	<property name="repo.folder" value="/tmp/repo" />
 	<property name="build.folder" value="/tmp/build" />
+	<!-- exclusions from build process - e.g. /tests folder found in copies of git repo. that would hold unit test code etc. -->
+	<property name="file_excludes" value="" />
 
 	<!-- set project specific properties from external file "project  properties" -->
 	<!-- or override by selecting file on run with "$phing -propertyfile <filename>"   -->
@@ -40,10 +42,6 @@
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
 	<property name="build.version" value="2.3.1" />
 
-
-	<!-- exclusions from build process - e.g. /tests folder found in copies of git repo. -->
-	<property name="file_excludes" value="**/tests/**/*" />
-
 	<!-- Set up some some timestamps -->
 	<tstamp>
 		<format property="build.time" pattern="%Y-%h-%d" />
@@ -52,7 +50,9 @@
 	</tstamp>
 
 <!--******************************************************************************************************
-	 	End of Initialisation
+	 	End of Initialisation     
+
+JoomExtBuild / build.xml 
     ******************************************************************************************************  -->
 
 <!--******************************************************************************************************
@@ -317,7 +317,8 @@
 		<mkdir dir="${dest.folder}" />
 		<zip destfile="${dest.folder}/${dir.name}.zip" >
 				<fileset dir="${folder.path}">
-					 <include name="**/**" />
+					<include name="**/**" />
+					<exclude name="${file_excludes}" />
 				</fileset>
 		</zip>
 	</target>
