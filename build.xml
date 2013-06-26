@@ -20,7 +20,8 @@
 	<property name="repo.folder" value="/tmp/repo" />
 	<property name="build.folder" value="/tmp/build" />
 	<!-- exclusions from build process - e.g. /tests folder found in copies of git repo. that would hold unit test code etc. -->
-	<property name="file_excludes" value="" />
+	<property name="test_file_excludes" value="" />
+	<property name="notes_file_excludes" value="" />
 
 	<!-- set project specific properties from external file "project  properties" -->
 	<!-- or override by selecting file on run with "$phing -propertyfile <filename>"   -->
@@ -318,7 +319,9 @@ JoomExtBuild / build.xml
 		<zip destfile="${dest.folder}/${dir.name}.zip" >
 				<fileset dir="${folder.path}">
 					<include name="**/**" />
-					<exclude name="${file_excludes}" />
+					<!-- Leave out the following as they should not appear in the final package -->
+					<exclude name="${test_file_excludes}" />
+					<exclude name="${notes_file_excludes}" />
 				</fileset>
 		</zip>
 	</target>
