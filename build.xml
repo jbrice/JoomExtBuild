@@ -35,13 +35,15 @@
 			</then> 
 		</if>
 
-	<!-- define some typical values for this property file below (overridden if in proprty file) --> 
+	<!-- define some typical values for this property file below (NB overridden if in proprty file) --> 
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
 	<property name="package.name" value="pkg_test" />
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
 	<property name="element.list" value="plg_authentication_gmail,mod_breadcrumbs,com_banners" />
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
 	<property name="build.version" value="2.3.1" />
+	<!-- Update date/version stamps in files? yes/no-->
+	<property name="do.update.version=no" value="no" />
 
 	<!-- Set up some some timestamps -->
 	<tstamp>
@@ -70,8 +72,14 @@ JoomExtBuild / build.xml
 		<!-- Copy extension resources files to repository folder by calling the appropriate target routine -->
 		<!-- debug code <echo msg="DEBUG: element.name=${element.name}, element.dir = ${element.dir}" /> -->
 		<phingcall target="get_${element.type}"></phingcall>
-		<!-- Update Version numbers and dates in the copied PHP files -->
-		<phingcall target="do_datestamps" />
+
+		<!-- Update Version numbers and dates in the copied PHP files if enabled in project.properties -->
+		<if>
+			<equals arg1="${do.update.version}" arg2="yes" />
+			<then>
+				<phingcall target="do_datestamps" />
+			</then>
+		</if>
 	</target>
 
 	<target name="get_module">
