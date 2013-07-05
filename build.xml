@@ -314,6 +314,8 @@ JoomExtBuild / build.xml
 	<!-- Loop through folders in repo. for each extension element and build ZIP files -->
 		<foreach param="dir.name" absparam="folder.path" target="_add_to_zip">
 		  <fileset dir="${repo.folder}/${package.name}">
+				<exclude name="${test_file_excludes}" />
+				<exclude name="${notes_file_excludes}" />
 				<type type="dir" />
 				<depth max="0" min="0" />
 		  </fileset>
