@@ -54,8 +54,6 @@
 
 <!--******************************************************************************************************
 	 	End of Initialisation     
-
-JoomExtBuild / build.xml 
     ******************************************************************************************************  -->
 
 <!--******************************************************************************************************
@@ -229,7 +227,7 @@ JoomExtBuild / build.xml
 		</if>
 		<!-- Look for lanaguage files in shared language folders -->
 		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/language">
+			<fileset dir="${project.root}/site/language">
 				<include name="**/*${element.name}*.ini"/>
 				<exclude name="**/overrides/**.*"/>
 			</fileset>
@@ -364,7 +362,6 @@ JoomExtBuild / build.xml
 					<fileset dir="${source.folder}" casesensitive="false">
 						<include name="${package.manifest}"/>
 						<include name="licence.txt"/>
-						<include name="license.txt"/>
 					</fileset>
 					<filterchain>
 						<replaceregexp>
