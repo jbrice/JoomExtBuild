@@ -110,19 +110,8 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for lanaguage files in shared language folders -->
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/administrator/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
+		<!-- Look for language files in shared language folders and copy accross -->
+		<phingcall target="_get.lang.files" />
 	</target>
 
 	<target name="get_plugin">
@@ -145,20 +134,8 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for lanaguage files in shared language folders -->
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/administrator/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-
-		</copy>
+		<!-- Look for language files in shared language folders and copy accross -->
+		<phingcall target="_get.lang.files" />
 	</target>
 
 	<target name="get_component" >
@@ -185,19 +162,8 @@
 				<move file="${repo.folder}/${package.name}/${element.name}/admin/script.php" todir="$${repo.folder}/${package.name}/${element.name}" />
 			</then>
 		</if>
-		<!-- Look for lanaguage files in shared language folders -->
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/administrator/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
+		<!-- Look for language files in shared language folders and copy accross -->
+		<phingcall target="_get.lang.files" />
 	</target>
 
 	<target name="get_template">
@@ -225,21 +191,9 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for lanaguage files in shared language folders -->
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/site/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
-		<copy todir="${repo.folder}/${package.name}/${element.name}/language" haltonerror="false">
-			<fileset dir="${project.root}/administrator/language">
-				<include name="**/*${element.name}*.ini"/>
-				<exclude name="**/overrides/**.*"/>
-			</fileset>
-		</copy>
+		<!-- Look for language files in shared language folders and copy accross -->
+		<phingcall target="_get.lang.files" />
 	</target>
-
 
 	<target name="_media">
 	<!-- Check if the extension has a media folder and copy it -->
@@ -306,7 +260,6 @@
 		</delete>
 		<mkdir dir="${build.folder}/${package.name}" />
 	</target>
-
 
 	<target name="build_dist_files">
 	<!-- Loop through folders in repo. for each extension element and build ZIP files -->
@@ -450,7 +403,42 @@
                 }
             ]]>
         </adhoc-task>
-    </target>
+	</target>
+
+
+
+	<target name="_get.lang.files" description="set up correct source and destination folders for transfer of language files from test site to repo.">
+		<!-- Look for lanaguage files in backend shared language folders -->
+		<property name="source.lang.folder" value="${project.root}/administrator/language" override="true" />
+		<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/admin/language" override="true" />
+		<phingcall target="_iterate.lang.folders"/>
+
+		<!-- Look for lanaguage files in frontend shared language folders -->
+		<property name="source.lang.folder" value="${project.root}/language" override="true" />
+		<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/site/language" override="true" />
+		<phingcall target="_iterate.lang.folders"/>
+	</target>
+
+	<target name="_iterate.lang.folders" description="iterate through indiviadual language folders and transfer lang. files, ignoring overrides.">
+		<foreach param="dir.name" absparam="folder.path" target="_copy.lang.files">
+		  <fileset dir="${source.lang.folder}">
+				<exclude name="overrides"/>
+				<type type="dir" />
+				<depth max="0" min="0" />
+		  </fileset>
+		</foreach>
+	</target>
+
+	<target name="_copy.lang.files" description="do transfer of language files for current element from test site to repo. Make folder structure if necessary.">
+		<mkdir dir="${dest.lang.folder}/${dir.name}" />
+		<copy todir="${dest.lang.folder}/${dir.name}" haltonerror="false">
+			<fileset dir="${source.lang.folder}/${dir.name}">
+				<include name="*${element.name}.ini"/>
+				<include name="*${element.name}.sys.ini"/>
+			</fileset>
+		</copy> 
+	</target>
+
 <!--******************************************************************************************************
 	 	End of Utility Routines
     ******************************************************************************************************  -->
