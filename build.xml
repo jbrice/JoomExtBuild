@@ -110,7 +110,8 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for language files in shared language folders and copy accross -->
+		<!-- Look for language files in shared language folders and copy across -->
+		<property name="is.plugin" value="false" override="true"/>
 		<phingcall target="_get.lang.files" />
 	</target>
 
@@ -134,7 +135,8 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for language files in shared language folders and copy accross -->
+		<!-- Look for language files in shared language folders and copy across -->
+		<property name="is.plugin" value="true" override="true"/>
 		<phingcall target="_get.lang.files" />
 	</target>
 
@@ -162,7 +164,8 @@
 				<move file="${repo.folder}/${package.name}/${element.name}/admin/script.php" todir="$${repo.folder}/${package.name}/${element.name}" />
 			</then>
 		</if>
-		<!-- Look for language files in shared language folders and copy accross -->
+		<!-- Look for language files in shared language folders and copy across -->
+		<property name="is.plugin" value="false" override="true"/>
 		<phingcall target="_get.lang.files" />
 	</target>
 
@@ -191,7 +194,8 @@
 				<fail msg="Source folder does not exist ${source.dir}" />
 			</else>
 		</if>
-		<!-- Look for language files in shared language folders and copy accross -->
+		<!-- Look for language files in shared language folders and copy across -->
+		<property name="is.plugin" value="false" override="true"/>
 		<phingcall target="_get.lang.files" />
 	</target>
 
@@ -410,12 +414,29 @@
 	<target name="_get.lang.files" description="set up correct source and destination folders for transfer of language files from test site to repo.">
 		<!-- Look for lanaguage files in backend shared language folders -->
 		<property name="source.lang.folder" value="${project.root}/administrator/language" override="true" />
-		<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/admin/language" override="true" />
+		<!-- Plugin shared language folders only in backend and go in /language folder, not /admin/language folder-->
+		<if>
+				<istrue value="${is.plugin}"  />
+			<then>
+				<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/language" override="true" />
+			</then>
+			<else>
+				<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/admin/language" override="true" />
+			</else>
+		</if>
 		<phingcall target="_iterate.lang.folders"/>
 
 		<!-- Look for lanaguage files in frontend shared language folders -->
 		<property name="source.lang.folder" value="${project.root}/language" override="true" />
-		<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/site/language" override="true" />
+		<!-- Plugin shared language folders only in backend so skip if plugin -->
+		<if>
+				<not>
+					<istrue value="${is.plugin}"  />
+				</not>
+			<then>
+				<property name="dest.lang.folder" value="${repo.folder}/${package.name}/${element.name}/site/language" override="true" />
+			</then>
+		</if>
 		<phingcall target="_iterate.lang.folders"/>
 	</target>
 
