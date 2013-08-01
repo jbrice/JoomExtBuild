@@ -440,7 +440,7 @@
 		<phingcall target="_iterate.lang.folders"/>
 	</target>
 
-	<target name="_iterate.lang.folders" description="iterate through indiviadual language folders and transfer lang. files, ignoring overrides.">
+	<target name="_iterate.lang.folders" description="iterate through individual language folders and transfer lang. files, ignoring overrides.">
 		<foreach param="dir.name" absparam="folder.path" target="_copy.lang.files">
 		  <fileset dir="${source.lang.folder}">
 				<exclude name="overrides"/>
@@ -451,8 +451,7 @@
 	</target>
 
 	<target name="_copy.lang.files" description="do transfer of language files for current element from test site to repo. Make folder structure if necessary.">
-		<mkdir dir="${dest.lang.folder}/${dir.name}" />
-		<copy todir="${dest.lang.folder}/${dir.name}" haltonerror="false">
+		<copy todir="${dest.lang.folder}/${dir.name}" haltonerror="false" includeemptydirs="false">
 			<fileset dir="${source.lang.folder}/${dir.name}">
 				<include name="*${element.name}.ini"/>
 				<include name="*${element.name}.sys.ini"/>
