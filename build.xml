@@ -271,6 +271,8 @@
 		  <fileset dir="${repo.folder}/${package.name}">
 				<exclude name="${test_file_excludes}" />
 				<exclude name="${notes_file_excludes}" />
+				<!-- Exclude IDE temp file folder(s) -->
+				<exclude name=".*" />
 				<type type="dir" />
 				<depth max="0" min="0" />
 		  </fileset>
