@@ -41,9 +41,19 @@
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
 	<property name="element.list" value="plg_authentication_gmail,mod_breadcrumbs,com_banners" />
 	<!-- Extension package name here - e.g. mod_cakecrumbs , or pkg_something when multi-element extension. -->
-	<property name="build.version" value="2.3.1" />
+	<property name="build.version" value="" />
 	<!-- Update date/version stamps in files? yes/no-->
-	<property name="do.update.version=no" value="no" />
+	<property name="do.update.version" value="no" />
+	<if>
+		<equals arg1="${build.version}" arg2="GIT" />
+		<!-- "build.version" is 'GIT' , so try to get one from GIT repo. tag -->
+		<!-- thanks to http://stackoverflow.com/questions/8113157/get-latest-git-tag-from-a-repository-using-phing -->
+		<then>
+			<exec outputProperty="build.version" 
+					command="git describe --tags `git rev-list --tags --max-count=1`" 
+					dir="${repo.folder}/${package.name}" />
+		</then>
+	</if>
 
 	<!-- Set up some some timestamps -->
 	<tstamp>
@@ -75,7 +85,7 @@
 		<if>
 			<equals arg1="${do.update.version}" arg2="yes" />
 			<then>
-				<phingcall target="do_datestamps" />
+				<phingcall target="do_version_stamps" />
 			</then>
 		</if>
 	</target>
@@ -213,10 +223,10 @@
 			</if>
 	</target>
 
-    <target name="do_datestamps">
+    <target name="do_version_stamps">
 		<!-- Update version no. and build date in PHP file headers -->		
 		<property name="find.version.data"><![CDATA[((\*\s*@version\s*).*)]]></property>
-		<property name="replace.version.data" value="${2}${build.version} Dated: ${build.time}"/>
+		<property name="replace.version.data" value="${2}${build.version}"/>
 
 		<reflexive>
 		  <fileset dir="${repo.folder}">
