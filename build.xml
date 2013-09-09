@@ -85,6 +85,7 @@
 		<if>
 			<equals arg1="${do.update.version}" arg2="yes" />
 			<then>
+				<property name="update.folder" value="${repo.folder}" override="true"/>
 				<phingcall target="do_version_stamps" />
 			</then>
 		</if>
@@ -223,47 +224,12 @@
 			</if>
 	</target>
 
-    <target name="do_version_stamps">
-		<!-- Update version no. and build date in PHP file headers -->		
-		<property name="find.version.data"><![CDATA[((\*\s*@version\s*).*)]]></property>
-		<property name="replace.version.data" value="${2}${build.version}"/>
-
-		<reflexive>
-		  <fileset dir="${repo.folder}">
-			<include name="**/*.php" />
-		  </fileset>
-		  <filterchain>
-			<replaceregexp>
-				<!-- Update version number -->
-				<regexp pattern="${find.version.data}" replace="${replace.version.data}" ignoreCase="true"/>
-			</replaceregexp>
-		  </filterchain>
-		</reflexive>
-		<!-- Update headers in manifest (.XML) file(s) -->
-		<property name="find1"><![CDATA[<creationDate>.*</creationDate>]]></property>
-		<property name="replace1"><![CDATA[<creationDate>${build.time}</creationDate>]]></property>
-		<property name="find2"><![CDATA[<version>.*</version>]]></property>
-		<property name="replace2"><![CDATA[<version>${build.version}</version>]]></property>
-		<reflexive>
-		  <fileset dir="${repo.folder}">
-			<include name="**/*.xml" />
-		  </fileset>
-		  <filterchain>
-			<replaceregexp>
-				<!-- Update version number -->
-				<regexp pattern="${find1}" replace="${replace1}" ignoreCase="true"/>
-				<regexp pattern="${find2}" replace="${replace2}" ignoreCase="true"/>
-			</replaceregexp>
-		  </filterchain>
-		</reflexive>
-    </target>
 <!--******************************************************************************************************
 	 end of Update Repo.
     ******************************************************************************************************  -->
 
-
 <!--******************************************************************************************************
-	  Build Extension - Collect extension files from repository, move to build folder and into a ZIP file 
+	  Build Extension Distribution File - Collect extension files from repository, move to build folder and into a ZIP file 
     ******************************************************************************************************  -->
     <target name="build_extension" depends="clear_buildfiles, build_dist_files, build_package" description="Builds the extension distro. file from repository contents." />
 
@@ -330,7 +296,9 @@
 				<copy todir="${build.location}" haltonerror="false">
 					<fileset dir="${source.folder}" casesensitive="false">
 						<include name="${package.manifest}"/>
-						<include name="licence.txt"/>
+						<include name="Licence.txt"/>
+						<include name="license.txt" />
+						<include name="*.script.php" />
 					</fileset>
 					<filterchain>
 						<replaceregexp>
@@ -351,6 +319,7 @@
 			 <include name="${package.name}.xml" />
 			 <include name="licence.txt" />
 			 <include name="license.txt" />
+			 <include name="*.script.php" />
 		</fileset>
 		<!-- Zip up package components -->
 		<zip destfile="${build.folder}/${package.name}/${package.name}.zip" >
@@ -367,9 +336,59 @@
 	  End of Build Distibution File 
     ******************************************************************************************************  -->
 
+
+<!--******************************************************************************************************
+	 Update Version Stamps - Just Do Recursive Search-and-Replace of Rev. dates and Version Nos
+    ******************************************************************************************************  -->
+
+	<target name="update_version_info" description="Replace Rev. dates and Version Nos. in whole repository">
+				<property name="update.folder" value="${repo.folder}" override="true"/>
+				<phingcall target="do_version_stamps" />
+	</target>
+
+<!--******************************************************************************************************
+	 end of Update Version Stamps
+    ******************************************************************************************************  -->
+
+
 <!--******************************************************************************************************
 	 	Untility Routines in here
     ******************************************************************************************************  -->
+    <target name="do_version_stamps">
+		<!-- Update version no. and build date in PHP file headers -->		
+		<property name="find.version.data"><![CDATA[((\*\s*@version\s*).*)]]></property>
+		<property name="replace.version.data" value="${2}${build.version}"/>
+
+		<reflexive>
+		  <fileset dir="${update.folder}">
+			<include name="**/*.php" />
+		  </fileset>
+		  <filterchain>
+			<replaceregexp>
+				<!-- Update version number -->
+				<regexp pattern="${find.version.data}" replace="${replace.version.data}" ignoreCase="true"/>
+			</replaceregexp>
+		  </filterchain>
+		</reflexive>
+		<!-- Update headers in manifest (.XML) file(s) -->
+		<property name="find1"><![CDATA[<creationDate>.*</creationDate>]]></property>
+		<property name="replace1"><![CDATA[<creationDate>${build.time}</creationDate>]]></property>
+		<property name="find2"><![CDATA[<version>.*</version>]]></property>
+		<property name="replace2"><![CDATA[<version>${build.version}</version>]]></property>
+		<reflexive>
+		  <fileset dir="${update.folder}">
+			<include name="**/*.xml" />
+		  </fileset>
+		  <filterchain>
+			<replaceregexp>
+				<!-- Update version number -->
+				<regexp pattern="${find1}" replace="${replace1}" ignoreCase="true"/>
+				<regexp pattern="${find2}" replace="${replace2}" ignoreCase="true"/>
+			</replaceregexp>
+		  </filterchain>
+		</reflexive>
+    </target>
+
     <target name="_customtasks">
         <adhoc-task name="jproject">
             <![CDATA[

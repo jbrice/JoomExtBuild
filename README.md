@@ -3,6 +3,8 @@ It consists of two parts:
 - "update_repo" which updates a repository (or just a holding folder) from a Joomla! installation or test server with the files that make up that chosen extension.
 - "build_extension" that takes those files and creates an installable package from them.
 
+Also "update_version_info" that - separately to any other operations - updates version numbers and time stamps of .php and .xml files in the project repository 
+
 See "Joomla Build Script readme.pdf" for full documentation.
 
 Issued under the terms of the GNU GENERAL PUBLIC LICENSE (License.txt).
