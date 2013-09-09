@@ -321,8 +321,9 @@
 			 <include name="license.txt" />
 			 <include name="*.script.php" />
 		</fileset>
-		<!-- Zip up package components -->
-		<zip destfile="${build.folder}/${package.name}/${package.name}.zip" >
+		<!-- Zip up package components - filename pattern = package_name_version.zip -->
+		<php expression="strtolower(${build.version})" returnProperty="build.version.lcase"/>
+		<zip destfile="${build.folder}/${package.name}/${package.name}_${build.version.lcase}.zip" >
 			 <fileset refid="zip.these" />
 		</zip>
 		<!-- Clean up -->
