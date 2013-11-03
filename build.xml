@@ -343,7 +343,7 @@
     ******************************************************************************************************  -->
 
 	<target name="update_version_info" description="Replace Rev. dates and Version Nos. in whole repository">
-				<property name="update.folder" value="${repo.folder}" override="true"/>
+				<property name="update.folder" value="${repo.folder}/${package.name}" override="true"/>
 				<phingcall target="do_version_stamps" />
 	</target>
 
