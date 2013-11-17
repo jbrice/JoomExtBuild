@@ -180,6 +180,26 @@
 		<phingcall target="_get.lang.files" />
 	</target>
 
+	<target name="get_library" >
+	<!-- copies component project files to the repo.location -->
+		<!-- First we check if the extension has a media folder -->
+		<phingcall target="_media" /> 
+
+		<copy todir="${repo.folder}/${package.name}/libraries/${element.name}" haltonerror="false">
+			<fileset dir="${project.root}/libraries/${element.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<copy todir="${repo.folder}/${package.name}/libraries/${element.name}" haltonerror="false">
+			<fileset dir="${project.root}/administrator/manifests/libraries">
+				<include name="${element}.xml"/>
+			</fileset>
+		</copy>
+
+		<!-- Look for language files in shared language folders and copy accross -->
+		<phingcall target="_get.lang.files" />
+	</target>
+
 	<target name="get_template">
 	<!-- copies template project files to the repo.location -->
 		<if>
@@ -213,7 +233,7 @@
 	<target name="_media">
 	<!-- Check if the extension has a media folder and copy it -->
 			<if>
-				<available file="${repo.folder}/media/${element.name}" type="dir" />
+				<available file="${project.root}/media/${element.name}" type="dir" />
 				<then>
 					<copy todir="${repo.folder}/${package.name}/${element.name}/media" haltonerror="false">
 						<fileset dir="${project.root}/media/${element.name}">
@@ -401,6 +421,11 @@
                         $arr = explode("_", $str);
                         $prefix = $arr[0];
                         switch($prefix){
+						    case 'lib':
+                                $this->project->setProperty("element.type", "library");
+                              	$this->project->setProperty("element.dir", implode("_", $arr));
+                                $this->project->setProperty("element.manifest", implode("_", $arr));
+                                break;
                             case 'plg':
                                 $this->project->setProperty("element.type", "plugin");
                                 $this->project->setProperty("plugin.group", $arr[1]);
